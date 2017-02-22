@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+import sys
+
+class Job:
+	def __init__(self, job_details):
+		self.start_time, self.finish_time, self.cost = job_details
+	def __repr__(self):
+		return "(" + str(self.start_time) + ", " +  str(self.finish_time) + ", " + str(self.cost)  + ")"
+
+jobs_list = []
+for line in sys.stdin:
+	jobs_list.append(Job([int(i) for i in line.split()]))
+
+
+jobs_list.sort(key=lambda job: job.start_time)
+jobs_list.sort(key=lambda job: job.finish_time)
+
+for job in jobs_list:
+	print(job)
+
