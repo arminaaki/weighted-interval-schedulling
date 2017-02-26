@@ -4,6 +4,7 @@
 import sys
 from collections import defaultdict
 
+
 class Job:
 
     def __init__(self, job_details):
@@ -25,9 +26,11 @@ class JobManager:
         self.jobs_sorted_by_finish_time = []
         self.read_jobs()
         self.OPTIMAL = defaultdict(lambda: None)
+
     def read_jobs(self):
-        for line in  sys.stdin:
-            self.jobs_sorted_by_finish_time.append(Job([int(i) for i in line.split()]))
+        for line in sys.stdin:
+            self.jobs_sorted_by_finish_time.append(
+                Job([int(i) for i in line.split()]))
         self.jobs_sorted_by_finish_time.sort(key=lambda job: job.finish_time)
 
     def job_size(self):
@@ -61,9 +64,12 @@ class JobManager:
         elif self.OPTIMAL[i] != None:
             return self.OPTIMAL[i]
         else:
-            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(i)
-            y = self.OPTIMAL[i-1] if self.OPTIMAL[i-1] != None else self.compute_optimal(i - 1)
-            x = self.jobs_sorted_by_finish_time[i].cost + self.compute_optimal(non_overlapping_index)
+            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(
+                i)
+            y = self.OPTIMAL[i - 1] if self.OPTIMAL[i -
+                                                    1] != None else self.compute_optimal(i - 1)
+            x = self.jobs_sorted_by_finish_time[
+                i].cost + self.compute_optimal(non_overlapping_index)
             self.OPTIMAL[i] = max(x, y)
             return self.OPTIMAL[i]
 
@@ -71,8 +77,10 @@ class JobManager:
         self.OPTIMAL[0] = 0
         n = self.job_size()
         for i in range(1, n):
-            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(i)
-            self.OPTIMAL[i] = max(self.jobs_sorted_by_finish_time[i].cost + self.OPTIMAL[non_overlapping_index], self.OPTIMAL[i - 1])
+            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(
+                i)
+            self.OPTIMAL[i] = max(self.jobs_sorted_by_finish_time[
+                                  i].cost + self.OPTIMAL[non_overlapping_index], self.OPTIMAL[i - 1])
         return self.OPTIMAL[n - 1]
 
     def find_optimal_path(self):
@@ -91,6 +99,7 @@ class JobManager:
     def print_optimal_path(self):
         for job in reversed(self.find_optimal_path()):
             print (job)
+
     def maximum_payoff(self):
         print("Max Payoff:", self.compute_optimal2())
 
