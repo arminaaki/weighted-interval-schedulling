@@ -118,7 +118,7 @@ class JobManager:
             print (job)
 
     def maximum_payoff(self):
-        print("Max Payoff:", self.compute_optimal2())
+        print("Maximum Payoff:", self.compute_optimal2())
 
 if __name__ == "__main__":
     manager = JobManager()
