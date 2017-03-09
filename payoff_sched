@@ -37,6 +37,7 @@ class JobManager:
                 self.jobs_sorted_by_finish_time.append(Job([int(matched_numbers.group(1)), int(matched_numbers.group(2)), int(matched_numbers.group(3))]))
             else:
                sys.exit("Bad input.")
+        self.jobs_sorted_by_finish_time.append(Job([0.1,0.2,0.0009]))
         self.jobs_sorted_by_finish_time.sort(key=lambda job: job.finish_time)
 
     def job_size(self):
@@ -117,7 +118,7 @@ class JobManager:
             print (job)
 
     def maximum_payoff(self):
-        print("Max Payoff:", self.compute_optimal())
+        print("Max Payoff:", self.compute_optimal2())
 
 if __name__ == "__main__":
     manager = JobManager()
