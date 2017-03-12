@@ -1,20 +1,126 @@
 #!/usr/bin/env python3
 import sys
+import re
+from collections import defaultdict
+
 
 class Job:
-	def __init__(self, job_details):
-		self.start_time, self.finish_time, self.cost = job_details
-	def __repr__(self):
-		return "(" + str(self.start_time) + ", " +  str(self.finish_time) + ", " + str(self.cost)  + ")"
 
-jobs_list = []
-for line in sys.stdin:
-	jobs_list.append(Job([int(i) for i in line.split()]))
+    def __init__(self, job_details):
+        self.start_time, self.finish_time, self.cost = job_details
+        if self.start_time >= self.finish_time:
+            sys.exit("Finish time is smaller than Start time" + str(self.start_time) + " " + str(self.finish_time))
+        if self.finish_time < 0 or self.start_time < 0 or self.cost < 0:
+            sys.exit("Negative input")
+
+    def __repr__(self):
+        return str(self.start_time) + " " + str(self.finish_time) + " " + str(self.cost)
+
+    def __eq__(self, other):
+        return self.start_time == other.start_time and self.finish_time == other.finish_time and self.cost == other.cost
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
-jobs_list.sort(key=lambda job: job.start_time)
-jobs_list.sort(key=lambda job: job.finish_time)
+class JobManager:
 
-for job in jobs_list:
-	print(job)
+    def __init__(self):
+        self.jobs_sorted_by_finish_time = []
+        self.read_jobs()
+        self.OPTIMAL = defaultdict(lambda: None)
 
+    def read_jobs(self):
+        for line in sys.stdin:
+            matched_numbers = re.match(r"\s*([+-]?\d+)\s*([+-]?\d+)\s*([+-]?\d+)\s*", line)
+            if matched_numbers:
+                self.jobs_sorted_by_finish_time.append(Job([int(matched_numbers.group(1)), int(matched_numbers.group(2)), int(matched_numbers.group(3))]))
+            else:
+               sys.exit("Bad input.")
+        self.jobs_sorted_by_finish_time.append(Job([0.1,0.2,0.0009]))
+        self.jobs_sorted_by_finish_time.sort(key=lambda job: job.finish_time)
+
+    def job_size(self):
+        return len(self.jobs_sorted_by_finish_time)
+
+    def binary_search(self, low, high, job,  out):
+        mid_point = int((low + high) / 2)
+        if(low >= mid_point):
+            return
+        if self.jobs_sorted_by_finish_time[mid_point].finish_time <= job.start_time:
+            out.pop() if out else True
+            out.append(mid_point)
+            self.binary_search(mid_point, high, job, out)
+        else:
+            self.binary_search(low, mid_point, job, out)
+
+    def find_largest_non_overlapping_job(self, job):
+        out = [0]
+        self.binary_search(0, self.job_size() - 1, job, out)
+        return out[-1]
+
+    def find_largest_index_for_none_overlapping_job(self, index):
+        out = [0]
+        self.binary_search(0, self.job_size() - 1,
+                           self.jobs_sorted_by_finish_time[index], out)
+        return out[-1]
+
+    def compute_optimal_for_index(self, i):
+        if( self.job_size() == 1):
+            return self.jobs_sorted_by_finish_time[0].cost
+        if  i== 0:
+            return 0
+        elif self.OPTIMAL[i] != None:
+            return self.OPTIMAL[i]
+        else:
+            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(
+                i)
+            y = self.OPTIMAL[i - 1] if self.OPTIMAL[i -
+                                                    1] != None else self.compute_optimal(i - 1)
+            x = self.jobs_sorted_by_finish_time[
+                i].cost + self.compute_optimal_for_index(non_overlapping_index)
+            self.OPTIMAL[i] = max(x, y)
+            return self.OPTIMAL[i]
+
+    def compute_optimal(self):
+        n = self.job_size()
+        for i in range(0, n):
+            self.OPTIMAL[i] = self.compute_optimal_for_index(i)
+        return self.OPTIMAL[n-1]
+
+    def compute_optimal2(self):
+        n = self.job_size()
+        self.OPTIMAL[0] = 0 if n != 1 else self.jobs_sorted_by_finish_time[0].cost
+        for i in range(1, n):
+            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(
+                i)
+            self.OPTIMAL[i] = max(self.jobs_sorted_by_finish_time[
+                                  i].cost + self.OPTIMAL[non_overlapping_index], self.OPTIMAL[i - 1])
+        return self.OPTIMAL[n - 1]
+
+    def find_optimal_path(self):
+        out = []
+        iteration = self.job_size() - 1
+        if iteration == 0:
+            out.append(self.jobs_sorted_by_finish_time[0]) 
+        while (iteration > 0):
+            non_overlapping_index = self.find_largest_index_for_none_overlapping_job(
+                iteration)
+            if(self.jobs_sorted_by_finish_time[iteration].cost + self.OPTIMAL[non_overlapping_index] > self.OPTIMAL[iteration - 1]):
+                out.append(self.jobs_sorted_by_finish_time[iteration])
+                iteration = non_overlapping_index
+            else:
+                iteration -= 1
+        return out
+
+    def print_optimal_path(self):
+        for job in reversed(self.find_optimal_path()):
+            print (job)
+
+    def maximum_payoff(self):
+        print("Maximum Payoff:", self.compute_optimal2())
+
+if __name__ == "__main__":
+    manager = JobManager()
+    manager.maximum_payoff()
+    manager.print_optimal_path()
